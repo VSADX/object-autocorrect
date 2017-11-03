@@ -1,6 +1,6 @@
 {
   "name": "object-autocorrect",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A tool that wraps an object in a Proxy for autocorrecting.",
   "main": "index.js",
   "scripts": {

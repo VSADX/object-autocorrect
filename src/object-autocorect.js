@@ -120,6 +120,9 @@ class PropertyAutocorrect {
      * @returns {AutocorrectObject} An AutocorrectObject that will autocorrect properties and functions. 
      */
     constructor(target) {
+        if (typeof target !== 'object' || target instanceof Array) {
+            throw new TypeError('Invalid argument: target must be an obect.');
+        }
         return new AutocorrectObject(target);
     }
 

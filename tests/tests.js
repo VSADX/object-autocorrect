@@ -74,3 +74,32 @@ tape('revocable autocorrect test', t => {
         //TODO: Check for the right typeerror. Meh.
     }
 });
+
+tape('bad objects test', t => {
+    t.plan(4);
+
+    try {
+        new ObjectAutocorrect({});
+        t.pass();
+    } catch (err) {
+        t.fail('An error should not be thrown with a valid parameter.');
+    }
+
+    try {
+        new ObjectAutocorrect('string');
+    } catch (err) {
+        t.equal(err.message, 'Invalid argument: target must be an obect.');
+    }
+
+    try {
+        new ObjectAutocorrect(1337);
+    } catch (err) {
+        t.equal(err.message, 'Invalid argument: target must be an obect.');
+    }
+
+    try {
+        new ObjectAutocorrect([1, 2, 3]);
+    } catch (err) {
+        t.equal(err.message, 'Invalid argument: target must be an obect.');
+    }
+});

@@ -1,8 +1,6 @@
 # object-autocorrect
 A module that wraps an object in a Proxy for autocorrecting.
 
-*Documentation W.I.P.*
-
 ### About
 
 With this simple module you can wrap objects in an autocorrector.
@@ -34,7 +32,7 @@ This will return a Proxy which will act like an autocorrecter.
 
 You might have noticed that in my previous example, if you call
 
-    myAutocorrectObject.secondField
+    myAutocorrectObject.secondField;
 
 You will get an autocorrect object.
 

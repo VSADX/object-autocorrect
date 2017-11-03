@@ -28,7 +28,7 @@ To wrap an object into an autocorrector simply require it and call the construct
     const ObjectAutocorrect = require('object-autocorrect');
 
     const myObject = { ... };
-    const myAutocorrectObject = ObjectAutocorrect(myObject);
+    const myAutocorrectObject = new ObjectAutocorrect(myObject);
 
 This will return a Proxy which will act like an autocorrecter.
 
@@ -46,7 +46,7 @@ So:
 You can also create a revocable autocorrecter. That means that accessing the original autocorrect object will throw an exception.  
 Example:
 
-    myRevocableAutocorrectObj = ObjectAutocorrect.revocable(myObj);
+    myRevocableAutocorrectObj = ObjectAutocorrect.revocable(myObj); //Note the lack of the keyword 'new'.
 
     const objField = myRevocableAutocorrectObj.secndField.getTarget(); // -> { anotherField: [String], andSomeFunction: [Function] }
 

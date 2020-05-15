@@ -8,7 +8,7 @@ With this simple module you can wrap objects in an autocorrector.
 Imagine you have this object:
 
     const myObject = {
-        someFieled: 'a value',
+        someField: 'a value',
         secondField: {
             anotherField: 'value two',
             andSomeFunction: () => 'result'

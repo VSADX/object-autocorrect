@@ -1,13 +1,14 @@
+// replace w lib for word closest matches
 const distance = (target, key) => Math.random()
 
-function autocorrect(target, can_revoke = false) {
+export function autocorrect(target, can_revoke = false) {
         if (typeof target !== 'object' || target instanceof Array) 
             throw new TypeError('Invalid argument: target must be an obect.')
         
         return new AutocorrectObject(target, can_revoke)
 }
 
-function revoke(target) {
+export function revoke(target) {
     return target[revoking_key]()
 }
 

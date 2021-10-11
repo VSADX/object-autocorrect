@@ -1,157 +1,124 @@
 const distance = (target, key) => Math.random()
-const has      = (o, p) => Object.prototype.hasOwnProperty.call(o, p);
 
-const dontEnums = [
-    "toString",
-    "toLocaleString",
-    "valueOf",
-    "hasOwnProperty",
-    "isPrototypeOf",
-    "propertyIsEnumerable",
-    "constructor",
-    "__defineGetter__",
-    "__defineSetter__",
-    "__lookupGetter__",
-    "__lookupSetter__",
-    "__proto__"
-];
+export function autocorrect(target, can_revoke = false) {
+        if (typeof target !== 'object' || target instanceof Array) 
+            throw new TypeError('Invalid argument: target must be an obect.')
+        
+        return new AutocorrectObject(target, can_revoke)
+}
 
-function dist(target, list) {
-    let highest = 0, best;
-    for (const key of list) {
-        const dist = distance(target, key);
-        if (dist > highest) {
-            best = key;
-            highest = dist;
+export function revoke(target) {
+    return target[revoking_key]
+}
+
+function find(target = {}, prop = "", value = null, should_set = false) {
+    if(!lookup.has_prop(target, prop))
+        prop = lookup.pick_closest_match(prop, lookup.get_properties(target))
+
+    if(should_set) return target[prop] = value
+    else return target[prop]
+}
+
+const lookup = {
+    ignorable_properties: Object.getOwnPropertyNames(Object.prototype),
+    has_prop: (obj, prop) => Object.prototype.hasOwnProperty.call(o, prop),
+    pick_closest_match(word, options = [""]) {
+        let highest = 0, best
+        for (const key of options) {
+            const dist = distance(work, key)
+            if (dist > highest) {
+                best = key
+                highest = dist
+            }
         }
+        return best
+    },
+    get_properties(obj) {
+        if(obj === null) return []
+        const matches = []
+        const keys = Object.getOwnPropertyNames(obj)
+        const proto = Reflect.getPrototypeOf(obj)
+
+        for(const prop of keys) 
+            if(this.has_prop(obj, prop) && this.ignorable_properties.indexOf(prop) === -1) 
+                matches.push(prop)
+
+        return matches.concat(this.get_properties(proto))
     }
-    return best;
-}
-
-function find(target, prop, value, setting) {
-    prop = has(target, prop) ? prop : dist(prop, getKeys(target));
-    if (setting) return target[prop] = value;
-    return target[prop];
-}
-
-function getKeys(obj) {
-    if (obj === null) return [];
-    const matches = []
-    const keys = Object.getOwnPropertyNames(obj)
-    const proto = Reflect.getPrototypeOf(obj)
-
-    for (const prop of keys) 
-        if (has(obj, prop) && dontEnums.indexOf(prop) === -1) 
-            matches.push(prop)
-
-    return matches.concat(getKeys(proto));
 }
 
 const handler = {
-    apply(target, thisArg, argumentsList) {
-        const result = target(...argumentsList);
-        return (typeof result === 'object') ? new Proxy(result, handler) : result;
+    apply(target, thisArg, args) {
+        const result = target(...args)
+        return (typeof result === 'object') ? new Proxy(result, handler) : result
     },
     get(target, prop) {
-        let isRevocableProxy;
+        let isRevocableProxy = false
 
-        if (prop === 'getTarget') {
-            if (typeof target.revoke === 'function') {
-                const insideTarget = target.proxy.getTarget();
-                target.revoke();
-                return () => insideTarget;
+        if(prop === revoking_key) {
+            if(typeof target.revoke === 'function') {
+                const insideTarget = target.proxy[revoking_key]()
+                target.revoke()
+                return () => insideTarget
             }
-            return () => target;
+            return () => target
         }
 
         if (typeof target.revoke === 'function' && typeof target.proxy === 'object') {
-            target = target.proxy.getTarget();
-            isRevocableProxy = true;
+            target = target.proxy[revoking_key]()
+            isRevocableProxy = true
         }
 
-        const found = find(target, prop);
+        const found = find(target, prop)
 
         switch(typeof found) {
-            case 'object': {
-                if(!isRevocableProxy) {
-                    return new Proxy(found, handler);
-                } else {
-                    return new Proxy(Proxy.revocable(found, handler), handler);
-                }
-            }
-            case 'function': {
-                if (!isRevocableProxy) {
-                    return new Proxy(found.bind(target), handler);
-                } else {
-                    return new Proxy(Proxy.revocable(found.bind(target), handler), handler);
-                }
-            }
-            default: {
-                return found;
-            }
+            case "object": 
+                if(isRevocableProxy) 
+                    return new Proxy(Proxy.revocable(found, handler), handler)
+                else 
+                    return new Proxy(found, handler)
+            case "function": 
+                if (isRevocableProxy) 
+                    return new Proxy(Proxy.revocable(found.bind(target), handler), handler)
+                else 
+                    return new Proxy(found.bind(target), handler)
+            default return found
         }
     },
     set(target, prop, value) {
-        let isRevocableProxy;
-        if (typeof target.revoke === 'function' && typeof target.proxy === 'object') {
-            target = target.proxy.getTarget();
-            isRevocableProxy = true;
-        }
+        let isRevocableProxy = (typeof target.revoke === 'function' && typeof target.proxy === 'object')
 
-        const found = find(target, prop, value, true);
+        if(isRevocableProxy)
+            target = target.proxy.getTarget()
+
+        const found = find(target, prop, value, true)
         
-        if (typeof found === 'object') {
-            return found;
-        }
-
-        if (!isRevocableProxy) {        
-            return new Proxy(found, handler);
-        } else {
-            return new Proxy(Proxy.revocable(found, handler), handler);
-        }
-    }
-};
-
-export class PropertyAutocorrect {
-    /**
-     * Creates a new autocorrect property.
-     * @param {*} target The target object.
-     * @returns {AutocorrectObject} An AutocorrectObject that will autocorrect properties and functions.
-     */
-    constructor(target) {
-        if (typeof target !== 'object' || target instanceof Array) {
-            throw new TypeError('Invalid argument: target must be an obect.');
-        }
-        return new AutocorrectObject(target);
-    }
-
-    /**
-     * This will create a revocable AutocorrectObject. That means it will throw an error if you try to use it after it has been un-autocorrect'ed.
-     * @param {*} target The target object.
-     * @returns {RevocableAutocorrectObject} A revocable AutocorrectObject that will autocorrect properties and functions.
-     */
-    static revocable(target) {
-        return new AutocorrectObject(target, true);
+        if (typeof found === "object") return found
+        
+        if (isRevocableProxy) 
+            return new Proxy(Proxy.revocable(found, handler), handler)
+        else
+            return new Proxy(found, handler)
     }
 }
 
+const revoking_key = Symbol()
+
 class AutocorrectObject {
     constructor(target, revocable = false) {
-        if (!revocable) {
-            return new Proxy(target, handler);
-        } else {
-            return new Proxy(Proxy.revocable(target, handler), handler);
-        }
+        return revocable ?
+            new Proxy(Proxy.revocable(target, handler), handler) :
+            new Proxy(target, handler)
     }
     
     /**
      * Get the object it is autocorrecting. If this is a revocable AutocorrectObeject, it will also revoke the autocorrecting.
      * @returns {*} The object it autocorrected.
      */
-    getTarget() {
-        if (typeof this.revoke === 'function') {
-            this.revoke();
-        }
-        return this.getTarget();
+    [revoking_key]() {
+        if (typeof this.revoke === 'function') 
+            this.revoke()
+        
+        return this[revoking_key]()
     }
 }

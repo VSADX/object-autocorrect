@@ -1,14 +1,14 @@
 const distance = (target, key) => Math.random()
 
-export function autocorrect(target, can_revoke = false) {
+function autocorrect(target, can_revoke = false) {
         if (typeof target !== 'object' || target instanceof Array) 
             throw new TypeError('Invalid argument: target must be an obect.')
         
         return new AutocorrectObject(target, can_revoke)
 }
 
-export function revoke(target) {
-    return target[revoking_key]
+function revoke(target) {
+    return target[revoking_key]()
 }
 
 function find(target = {}, prop = "", value = null, should_set = false) {
@@ -21,11 +21,11 @@ function find(target = {}, prop = "", value = null, should_set = false) {
 
 const lookup = {
     ignorable_properties: Object.getOwnPropertyNames(Object.prototype),
-    has_prop: (obj, prop) => Object.prototype.hasOwnProperty.call(o, prop),
+    has_prop: (obj, prop) => Object.prototype.hasOwnProperty.call(obj, prop),
     pick_closest_match(word, options = [""]) {
         let highest = 0, best
         for (const key of options) {
-            const dist = distance(work, key)
+            const dist = distance(word, key)
             if (dist > highest) {
                 best = key
                 highest = dist
@@ -82,7 +82,7 @@ const handler = {
                     return new Proxy(Proxy.revocable(found.bind(target), handler), handler)
                 else 
                     return new Proxy(found.bind(target), handler)
-            default return found
+            default: return found
         }
     },
     set(target, prop, value) {

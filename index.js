@@ -1,19 +1,19 @@
-/**
- * Some code has been "borrowed" from devsnek (Gus) at
- * https://gist.github.com/devsnek/4ee62455689e241004f63f96f5bf9b46
- */
-
-const distance = require('jaro-winkler');
+const distance = (target, key) => Math.random()
 const has      = (o, p) => Object.prototype.hasOwnProperty.call(o, p);
 
 const dontEnums = [
-    'toString',
-    'toLocaleString',
-    'valueOf',
-    'hasOwnProperty',
-    'isPrototypeOf',
-    'propertyIsEnumerable',
-    'constructor'
+    "toString",
+    "toLocaleString",
+    "valueOf",
+    "hasOwnProperty",
+    "isPrototypeOf",
+    "propertyIsEnumerable",
+    "constructor",
+    "__defineGetter__",
+    "__defineSetter__",
+    "__lookupGetter__",
+    "__lookupSetter__",
+    "__proto__"
 ];
 
 function dist(target, list) {
@@ -36,16 +36,15 @@ function find(target, prop, value, setting) {
 
 function getKeys(obj) {
     if (obj === null) return [];
-    const keys = Object.getOwnPropertyNames(obj);
-    const proto = Reflect.getPrototypeOf(obj);
+    const matches = []
+    const keys = Object.getOwnPropertyNames(obj)
+    const proto = Reflect.getPrototypeOf(obj)
 
-    for (const prop of dontEnums) {
-        if (has(obj, prop) && keys.indexOf(prop) !== -1) {
-            keys.push(prop);
-        }
-    }
+    for (const prop of keys) 
+        if (has(obj, prop) && dontEnums.indexOf(prop) === -1) 
+            matches.push(prop)
 
-    return keys.concat(getKeys(proto));
+    return matches.concat(getKeys(proto));
 }
 
 const handler = {
@@ -113,11 +112,11 @@ const handler = {
     }
 };
 
-class PropertyAutocorrect {
+export class PropertyAutocorrect {
     /**
      * Creates a new autocorrect property.
      * @param {*} target The target object.
-     * @returns {AutocorrectObject} An AutocorrectObject that will autocorrect properties and functions. 
+     * @returns {AutocorrectObject} An AutocorrectObject that will autocorrect properties and functions.
      */
     constructor(target) {
         if (typeof target !== 'object' || target instanceof Array) {
@@ -135,8 +134,6 @@ class PropertyAutocorrect {
         return new AutocorrectObject(target, true);
     }
 }
-
-module.exports = PropertyAutocorrect;
 
 class AutocorrectObject {
     constructor(target, revocable = false) {

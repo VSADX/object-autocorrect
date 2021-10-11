@@ -17,6 +17,8 @@ push = 5; push = 3; slide = add;
   
 new:
 ```js
+autocorrect({push, slide, add})
+
 psh = 5; ph = 3; sld = ad
 // [8]
 ```
